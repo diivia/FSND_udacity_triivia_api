@@ -48,11 +48,16 @@ def create_app(test_config=None):
 
     @app.route('/categories')
     def load_categories():
-        categories = list(map(Category.format, Category.query.order_by(Category.id).all()))
+        categories_raw = Category.query.order_by(Category.id).all()
+        categories = {category.id: category.type for category in categories_raw}
+
+        if len(categories) == 0:
+            abort(404)
+
         return jsonify({
             'success': True,
             'categories': categories,
-            'total_categories': len(Category.query.all())
+            'total_categories': len(categories)
         })
 
     '''
@@ -76,10 +81,15 @@ def create_app(test_config=None):
         if len(current_questions) == 0:
             abort(404)
 
+        categories_raw = Category.query.order_by(Category.id).all()
+        categories = {category.id: category.type for category in categories_raw}
+
         return jsonify({
             'success': True,
             'questions': current_questions,
-            'total_questions': len(Question.query.all())
+            'total_questions': len(Question.query.all()),
+            'current_category': None,
+            'categories': categories
         })
 
     '''
@@ -89,6 +99,33 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page. 
     '''
+
+    @app.route('/questions/<int:question_id>', methods=['DELETE'])
+    def delete_question(question_id):
+        try:
+            question = Question.query.filter(Question.id == question_id).one_or_none()
+
+            if question is None:
+                abort(404)
+
+            question.delete()
+
+            questions = Question.query.order_by(Question.id).all()
+            current_questions = paginate_questions(request, questions)
+            categories_raw = Category.query.order_by(Category.id).all()
+            categories = {category.id: category.type for category in categories_raw}
+
+            return jsonify({
+                'success': True,
+                'question_id': question_id,
+                'questions': current_questions,
+                'total_questions': len(Question.query.all()),
+                'current_category': None,
+                'categories': categories
+            })
+
+        except:
+            abort(422)
 
     '''
     @TODO: 
@@ -112,6 +149,28 @@ def create_app(test_config=None):
     Try using the word "title" to start. 
     '''
 
+    @app.route('/questions', methods=['POST'])
+    def search_questions():
+        data = request.get_json()
+        search_term = data.get('searchTerm', '')
+
+        if len(search_term) == 0:
+            abort(404)
+
+        try:
+            questions = Question.query.filter(Question.question.ilike(f'%{search_term}%')).all()
+            current_questions = paginate_questions(request, questions)
+
+            return jsonify({
+                'success': True,
+                'questions': current_questions,
+                'total_questions': len(Question.query.all()),
+                'current_category': None
+            })
+
+        except:
+            abort(422)
+
     '''
     @TODO: 
     Create a GET endpoint to get questions based on category. 
@@ -120,6 +179,18 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that 
     category to be shown. 
     '''
+
+    @app.route('/categories/<int:category_id>/questions')
+    def load_questions_by_category(category_id):
+        questions = Question.query.filter(Question.category == category_id).all()
+        current_questions = paginate_questions(request, questions)
+
+        return jsonify({
+            'success': True,
+            'questions': current_questions,
+            'total_questions': len(Question.query.all()),
+            'current_category': Category.query.filter(Category.id == category_id).first().format()
+        })
 
     '''
     @TODO: 
@@ -138,5 +209,21 @@ def create_app(test_config=None):
     Create error handlers for all expected errors 
     including 404 and 422. 
     '''
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Not Found"
+        }), 404
+
+    @app.errorhandler(422)
+    def not_created(error):
+        return jsonify({
+            "success": False,
+            "error": 422,
+            "message": "Not Created/deleted"
+        }), 422
 
     return app
