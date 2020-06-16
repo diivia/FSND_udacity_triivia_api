@@ -71,6 +71,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['total_categories'])
         self.assertTrue(len(data['categories']))
 
+    def test_get_non_existing_category(self):
+        res = self.client().get('/categories/1000000')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+
     def test_delete_question(self):
         total_questions_before = len(Question.query.all())
         question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything", answer="42", category='1', difficulty=1)
@@ -89,7 +96,6 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(total_questions_before < total_questions_after_insert)
         self.assertTrue(total_questions_after_insert > total_questions_after_delete)
 
-
     def test_add_question(self):
         total_questions_before = len(Question.query.all())
         res = self.client().post('/questions', json={'question': "Answer to the Ultimate Question of Life, the Universe, and Everything",
@@ -103,6 +109,19 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertEqual(data['message'], 'Question successfully created!')
         self.assertTrue(total_questions_before < total_questions_after)
+
+    def test_get_questions_by_category(self):
+        question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything", answer="42", category='1', difficulty=1)
+        question.insert()
+
+        res = self.client().get(f'/categories/{question.category}/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(len(data['questions']))
+        self.assertEqual(data['current_category'], Category.query.filter(Category.id == question.category).first().format())
 
 
 # Make the tests conveniently executable
