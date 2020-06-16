@@ -27,7 +27,6 @@ class TriviaTestCase(unittest.TestCase):
             'category': '5',
             'difficulty': 5}
 
-
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
@@ -80,7 +79,8 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_delete_question(self):
         total_questions_before = len(Question.query.all())
-        question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything", answer="42", category='1', difficulty=1)
+        question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything",
+                            answer="42", category='1', difficulty=1)
         question.insert()
         total_questions_after_insert = len(Question.query.all())
         res = self.client().delete(f'/questions/{question.id}')
@@ -98,10 +98,11 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_add_question(self):
         total_questions_before = len(Question.query.all())
-        res = self.client().post('/questions', json={'question': "Answer to the Ultimate Question of Life, the Universe, and Everything",
-                                                     'answer': "42",
-                                                     'category': '1',
-                                                     'difficulty': 1})
+        res = self.client().post('/questions', json={
+            'question': "Answer to the Ultimate Question of Life, the Universe, and Everything",
+            'answer': "42",
+            'category': '1',
+            'difficulty': 1})
         total_questions_after = len(Question.query.all())
         data = json.loads(res.data)
 
@@ -111,7 +112,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(total_questions_before < total_questions_after)
 
     def test_get_questions_by_category(self):
-        question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything", answer="42", category='1', difficulty=1)
+        question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything",
+                            answer="42", category='1', difficulty=1)
         question.insert()
 
         res = self.client().get(f'/categories/{question.category}/questions')
@@ -121,7 +123,18 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertTrue(data['total_questions'])
         self.assertTrue(len(data['questions']))
-        self.assertEqual(data['current_category'], Category.query.filter(Category.id == question.category).first().format())
+        self.assertEqual(data['current_category'],
+                         Category.query.filter(Category.id == question.category).first().format())
+
+    def test_search_questions(self):
+        res = self.client().post('/questions/search', json={'searchTerm': 'a'})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(len(data['questions']))
+        self.assertEqual(data['current_category'], None)
 
 
 # Make the tests conveniently executable

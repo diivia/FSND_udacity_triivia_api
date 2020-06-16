@@ -172,7 +172,7 @@ def create_app(test_config=None):
     Try using the word "title" to start. 
     '''
 
-    @app.route('/questions', methods=['POST'])
+    @app.route('/questions/search', methods=['POST'])
     def search_questions():
         data = request.get_json()
         search_term = data.get('searchTerm', '')
@@ -182,11 +182,10 @@ def create_app(test_config=None):
 
         try:
             questions = Question.query.filter(Question.question.ilike(f'%{search_term}%')).all()
-            current_questions = paginate_questions(request, questions)
 
             return jsonify({
                 'success': True,
-                'questions': current_questions,
+                'questions': [question.format() for question in questions],
                 'total_questions': len(Question.query.all()),
                 'current_category': None
             })
@@ -237,7 +236,8 @@ def create_app(test_config=None):
             if quiz_category['id'] == 0:
                 questions = Question.query.filter(Question.id.notin_((previous_questions))).all()
             else:
-                questions = Question.query.filter(Question.category == quiz_category['id']).filter(Question.id.notin_((previous_questions))).all()
+                questions = Question.query.filter(Question.category == quiz_category['id']).filter(
+                    Question.id.notin_((previous_questions))).all()
 
             question = questions[random.randrange(len(questions))].format() if len(questions) > 0 else None
 
