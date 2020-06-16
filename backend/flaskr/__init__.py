@@ -147,7 +147,7 @@ def create_app(test_config=None):
         difficulty = data.get('difficulty', '')
 
         try:
-            question = Question(question=question, answer=answer, category=category, difficulty=difficulty)
+            question = Question(question, answer, category, difficulty)
             if question is None:
                 abort(404)
             question.insert()
@@ -226,6 +226,28 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not. 
     '''
+
+    @app.route('/quizzes', methods=['POST'])
+    def play_quiz():
+        try:
+            data = request.get_json()
+            previous_questions = data.get('previous_questions', '')
+            quiz_category = data.get('quiz_category', '')
+
+            if quiz_category['id'] == 0:
+                questions = Question.query.filter(Question.id.notin_((previous_questions))).all()
+            else:
+                questions = Question.query.filter(Question.category == quiz_category['id']).filter(Question.id.notin_((previous_questions))).all()
+
+            question = questions[random.randrange(len(questions))].format() if len(questions) > 0 else None
+
+            return jsonify({
+                'success': True,
+                'question': question,
+                'previous_questions': previous_questions
+            })
+        except:
+            abort(404)
 
     '''
     @TODO: 
