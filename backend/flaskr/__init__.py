@@ -234,10 +234,10 @@ def create_app(test_config=None):
             quiz_category = data.get('quiz_category', '')
 
             if quiz_category['id'] == 0:
-                questions = Question.query.filter(Question.id.notin_((previous_questions))).all()
+                questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
             else:
                 questions = Question.query.filter(Question.category == quiz_category['id']).filter(
-                    Question.id.notin_((previous_questions))).all()
+                    Question.id.notin_(previous_questions)).all()
 
             question = questions[random.randrange(len(questions))].format() if len(questions) > 0 else None
 
@@ -264,11 +264,19 @@ def create_app(test_config=None):
         }), 404
 
     @app.errorhandler(422)
-    def not_created(error):
+    def unprocessable(error):
         return jsonify({
             "success": False,
             "error": 422,
-            "message": "Not Created/deleted"
+            "message": "Unprocessable Error"
         }), 422
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "bad request"
+        }), 400
 
     return app

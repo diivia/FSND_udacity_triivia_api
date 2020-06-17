@@ -96,6 +96,19 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(total_questions_before < total_questions_after_insert)
         self.assertTrue(total_questions_after_insert > total_questions_after_delete)
 
+    def test_delete_none_existing_question(self):
+        total_questions_before = len(Question.query.all())
+        question_id = 1000000
+        res = self.client().delete(f'/questions/{question_id}')
+        total_questions_after_delete = len(Question.query.all())
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Unprocessable Error')
+        self.assertTrue(total_questions_before == total_questions_after_delete)
+
+
     def test_add_question(self):
         total_questions_before = len(Question.query.all())
         res = self.client().post('/questions', json={
@@ -135,6 +148,32 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['total_questions'])
         self.assertTrue(len(data['questions']))
         self.assertEqual(data['current_category'], None)
+
+    def test_play_quiz(self):
+        res = self.client().post('/quizzes', json={'previous_questions': [1], 'quiz_category': {'type': 'Science', 'id': 1}})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['previous_questions'])
+        self.assertTrue(len(data['question']))
+
+    def test_error_404_not_found(self):
+        res = self.client().post('/questions/search', json={'searchTerm': ''})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Not Found')
+
+    def test_error_422_unprocessable(self):
+        question_id = 100000
+        res = self.client().delete(f'/questions/{question_id}')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Unprocessable Error')
 
 
 # Make the tests conveniently executable
