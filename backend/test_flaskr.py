@@ -139,6 +139,15 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['current_category'],
                          Category.query.filter(Category.id == question.category).first().format())
 
+    def test_get_questions_by_none_existing_category(self):
+        question_category = '100000'
+        res = self.client().get(f'/categories/{question_category}/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Not Found')
+
     def test_search_questions(self):
         res = self.client().post('/questions/search', json={'searchTerm': 'a'})
         data = json.loads(res.data)
@@ -157,6 +166,14 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertTrue(data['previous_questions'])
         self.assertTrue(len(data['question']))
+
+    def test_play_quiz_empty_category(self):
+        res = self.client().post('/quizzes', json={'previous_questions': [], 'quiz_category': {}})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Not Found')
 
     def test_error_404_not_found(self):
         res = self.client().post('/questions/search', json={'searchTerm': ''})
