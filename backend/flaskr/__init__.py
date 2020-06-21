@@ -147,15 +147,15 @@ def create_app(test_config=None):
         difficulty = data.get('difficulty', '')
 
         try:
-            question = Question(question, answer, category, difficulty)
-            if question is None:
+            new_question = Question(question, answer, category, difficulty)
+            if new_question is None:
                 abort(404)
-            question.insert()
+            new_question.insert()
 
             return jsonify({
                 'success': True,
                 'message': 'Question successfully created!',
-                'question_id': question.id
+                'question_id': new_question.id
             })
 
         except:
