@@ -316,18 +316,18 @@ POST /quizzes - returnes random question from selected category, previously sele
 ##### POST '/questions/search'
 - Fetches a list of questions by search tearm
 - Request Arguments: search_term, string
-- curl -X POST -H "Content-Type: application/json" -d '{"searchTerm": "qwerty"}' http://127.0.0.1:5000/questions/search
+- curl -X POST -H "Content-Type: application/json" -d '{"searchTerm": "Hematology"}' http://127.0.0.1:5000/questions/search
 - Example response:
 ```
 {
   "current_category": null, 
   "questions": [
     {
-      "answer": "qwerty", 
+      "answer": "Blood", 
       "category": 1, 
-      "difficulty": 1, 
-      "id": 36, 
-      "question": "qwerty"
+      "difficulty": 4, 
+      "id": 22, 
+      "question": "Hematology is a branch of medicine involving the study of what?"
     }
   ], 
   "success": true, 
