@@ -124,6 +124,18 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Question successfully created!')
         self.assertTrue(total_questions_before < total_questions_after)
 
+    def test_add_category(self):
+        total_categories_before = len(Category.query.all())
+        res = self.client().post('/categories', json={
+            'categoryType': "Nature"})
+        total_categories_after = len(Category.query.all())
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['message'], 'Category successfully created!')
+        self.assertTrue(total_categories_before < total_categories_after)
+
     def test_get_questions_by_category(self):
         question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything",
                             answer="42", category='1', difficulty=1)

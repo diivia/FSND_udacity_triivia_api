@@ -88,6 +88,7 @@ GET '/categories' - returns all categories
 GET '/questions?page=<page_number>' - returns paginated questions (10 questions per page)
 DELETE '/questions/<question_id>' - deletes question
 POST '/questions' - adds new question
+POST '/categories' - adds new category
 POST '/questions/search' - returnes all questions by given search criteria
 GET '/categories/<category_id>/questions' - returnes all question of one selected category or all questions 
 POST /quizzes - returnes random question from selected category, previously selected question excluded
@@ -302,7 +303,20 @@ POST /quizzes - returnes random question from selected category, previously sele
 ```
 ##### POST '/questions'
 - Adds a new question
-- Request Arguments: {"question": "question", "answer": "answer", "category": "1", "difficulty": "1"}
+- Request Arguments: {"question": String, "answer": String, "category": Integer, "difficulty": Integer}
+- curl -X POST -H "Content-Type: application/json" -d '{"categoryType": "qwerty"}' http://127.0.0.1:5000/categories
+- Example response:
+```
+{
+  "category_id": 8, 
+  "message": "Category successfully created!", 
+  "success": true
+}
+```
+
+##### POST '/categories'
+- Adds a new category
+- Request Arguments: {"categoryType": String}
 - curl -X POST -H "Content-Type: application/json" -d '{"question": "qwerty", "answer": "qwerty", "category": "1", "difficulty": "1"}' http://127.0.0.1:5000/questions
 - Example response:
 ```
