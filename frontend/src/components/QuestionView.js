@@ -119,6 +119,7 @@ class QuestionView extends Component {
     }
   }
 
+
   render() {
     return (
       <div className="question-view">
@@ -128,7 +129,7 @@ class QuestionView extends Component {
             {Object.keys(this.state.categories).map((id, ) => (
               <li key={id} onClick={() => {this.getByCategory(id)}}>
                 {this.state.categories[id]}
-                <img className="category" src={`${this.state.categories[id]}.svg`}/>
+                <img className="category" src={ loadImage(this.state.categories[id]) }/>
               </li>
             ))}
           </ul>
@@ -153,6 +154,17 @@ class QuestionView extends Component {
 
       </div>
     );
+  }
+}
+
+let loadImage = function(variable){
+  var image = new Image();
+  var url_image = '../' + variable + `.svg`;
+  image.src = url_image;
+  if (image.width == 0) {
+    return `../default.svg`;
+  } else {
+    return `${variable}.svg`;
   }
 }
 
