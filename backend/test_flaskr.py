@@ -138,7 +138,7 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_get_questions_by_category(self):
         question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything",
-                            answer="42", category='1', difficulty=1)
+                            answer="42", category='1', difficulty=1, rating=1)
         question.insert()
 
         res = self.client().get(f'/categories/{question.category}/questions')

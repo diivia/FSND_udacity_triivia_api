@@ -144,6 +144,7 @@ class QuestionView extends Component {
               answer={q.answer}
               category={this.state.categories[q.category]} 
               difficulty={q.difficulty}
+              rating={q.rating}
               questionAction={this.questionAction(q.id)}
             />
           ))}
@@ -159,7 +160,7 @@ class QuestionView extends Component {
 
 let loadImage = function(variable){
   var image = new Image();
-  var url_image = '../' + variable + `.svg`;
+  var url_image = `${variable}.svg`;
   image.src = url_image;
   if (image.width == 0) {
     return `../default.svg`;

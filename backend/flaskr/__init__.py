@@ -145,9 +145,10 @@ def create_app(test_config=None):
         answer = data.get('answer', '')
         category = data.get('category', '')
         difficulty = data.get('difficulty', '')
+        rating = data.get('rating', '')
 
         try:
-            new_question = Question(question, answer, category, difficulty)
+            new_question = Question(question, answer, category, difficulty, rating)
             if new_question is None:
                 abort(404)
             new_question.insert()
