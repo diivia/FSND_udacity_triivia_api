@@ -4,7 +4,7 @@ import json
 from flask_sqlalchemy import SQLAlchemy
 
 from flaskr import create_app
-from models import setup_db, Question, Category
+from models import setup_db, Question, Category, User
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -18,21 +18,13 @@ class TriviaTestCase(unittest.TestCase):
         self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
-        self.new_category = {
-            'type': 'Sport'}
-
-        self.new_question = {
-            'question': 'Anansi Boys',
-            'answer': 'Neil Gaiman',
-            'category': '5',
-            'difficulty': 5}
-
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
+
 
     def tearDown(self):
         """Executed after reach test"""
@@ -80,7 +72,7 @@ class TriviaTestCase(unittest.TestCase):
     def test_delete_question(self):
         total_questions_before = len(Question.query.all())
         question = Question(question="Answer to the Ultimate Question of Life, the Universe, and Everything",
-                            answer="42", category='1', difficulty=1)
+                            answer="42", category='1', difficulty=1, rating=1)
         question.insert()
         total_questions_after_insert = len(Question.query.all())
         res = self.client().delete(f'/questions/{question.id}')
@@ -115,7 +107,8 @@ class TriviaTestCase(unittest.TestCase):
             'question': "Answer to the Ultimate Question of Life, the Universe, and Everything",
             'answer': "42",
             'category': '1',
-            'difficulty': 1})
+            'difficulty': 1,
+            'rating': 1})
         total_questions_after = len(Question.query.all())
         data = json.loads(res.data)
 
@@ -171,13 +164,28 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['current_category'], None)
 
     def test_play_quiz(self):
-        res = self.client().post('/quizzes', json={'previous_questions': [1], 'quiz_category': {'type': 'Science', 'id': 1}})
+        user_before = User.query.filter(User.id == 1).first().score
+        res = self.client().post('/quizzes', json={'previous_questions': [20], 'quiz_category': {'type': 'Science', 'id': 1}, 'user': 1, 'numGuess': 1})
+        user_after = User.query.filter(User.id == 1).first().score
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(data['previous_questions'])
         self.assertTrue(len(data['question']))
+        self.assertTrue(data['user'])
+        self.assertTrue(data['numTotal'])
+        self.assertTrue(user_after > user_before)
+
+    def test_play_quiz_calculate_score(self):
+        user_before = User.query.filter(User.id == 1).first().score
+        res = self.client().post('/quizzes', json={'previous_questions': [20], 'quiz_category': {'type': 'Science', 'id': 1}, 'user': 1, 'numGuess': 0})
+        user_after = User.query.filter(User.id == 1).first().score
+        self.assertTrue(user_after == user_before)
+
+        res = self.client().post('/quizzes', json={'previous_questions': [20], 'quiz_category': {'type': 'Science', 'id': 1}, 'user': 1, 'numGuess': 1})
+        user_after = User.query.filter(User.id == 1).first().score
+        self.assertTrue(user_after > user_before)
 
     def test_play_quiz_empty_category(self):
         res = self.client().post('/quizzes', json={'previous_questions': [], 'quiz_category': {}})

@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 
-from models import setup_db, Question, Category
+from models import setup_db, Question, Category, User
 
 QUESTIONS_PER_PAGE = 10
 
@@ -50,6 +50,7 @@ def create_app(test_config=None):
     def load_categories():
         categories_raw = Category.query.order_by(Category.id).all()
         categories = {category.id: category.type for category in categories_raw}
+        users = [user.format() for user in User.query.order_by(User.id).all()]
 
         if len(categories) == 0:
             abort(404)
@@ -57,7 +58,8 @@ def create_app(test_config=None):
         return jsonify({
             'success': True,
             'categories': categories,
-            'total_categories': len(categories)
+            'total_categories': len(categories),
+            'users': users
         })
 
     '''
@@ -257,6 +259,17 @@ def create_app(test_config=None):
             data = request.get_json()
             previous_questions = data.get('previous_questions', '')
             quiz_category = data.get('quiz_category', '')
+            user = data.get('user', '')
+            number_guess = data.get('numGuess', '')
+
+            total_score = 0
+
+            if user != '' and user is not None:
+                current_user = User.query.filter(User.id == user).one_or_none()
+                current_user.score = current_user.score + int(number_guess)
+                current_user.update()
+                print(current_user.score)
+                total_score = current_user.score
 
             if quiz_category['id'] == 0:
                 questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
@@ -269,7 +282,9 @@ def create_app(test_config=None):
             return jsonify({
                 'success': True,
                 'question': question,
-                'previous_questions': previous_questions
+                'previous_questions': previous_questions,
+                'user': user,
+                'numTotal': total_score
             })
         except:
             abort(404)
