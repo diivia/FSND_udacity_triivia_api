@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import $ from 'jquery';
 
 import '../stylesheets/QuizView.css';
+import Question from "./Question";
 
 const questionsPerPlay = 5; 
 
@@ -14,9 +15,12 @@ class QuizView extends Component {
         showAnswer: false,
         categories: {},
         numCorrect: 0,
+        numGuess: 0,
+        numTotal: 0,
         currentQuestion: {},
         guess: '',
-        forceEnd: false
+        forceEnd: false,
+        users: []
     }
   }
 
@@ -25,7 +29,9 @@ class QuizView extends Component {
       url: `/categories`, //TODO: update request URL
       type: "GET",
       success: (result) => {
-        this.setState({ categories: result.categories })
+        this.setState({
+            categories: result.categories,
+            users: result.users})
         return;
       },
       error: (error) => {
@@ -54,7 +60,9 @@ class QuizView extends Component {
       contentType: 'application/json',
       data: JSON.stringify({
         previous_questions: previousQuestions,
-        quiz_category: this.state.quizCategory
+        quiz_category: this.state.quizCategory,
+        numGuess: this.state.numGuess,
+        user: this.state.user,
       }),
       xhrFields: {
         withCredentials: true
@@ -66,7 +74,8 @@ class QuizView extends Component {
           previousQuestions: previousQuestions,
           currentQuestion: result.question,
           guess: '',
-          forceEnd: result.question ? false : true
+          forceEnd: result.question ? false : true,
+          numTotal: result.numTotal
         })
         return;
       },
@@ -83,6 +92,7 @@ class QuizView extends Component {
     let evaluate =  this.evaluateAnswer()
     this.setState({
       numCorrect: !evaluate ? this.state.numCorrect : this.state.numCorrect + 1,
+      numGuess: !evaluate ? 0 : 1,
       showAnswer: true,
     })
   }
@@ -93,6 +103,8 @@ class QuizView extends Component {
       previousQuestions: [], 
       showAnswer: false,
       numCorrect: 0,
+      numTotal: 0,
+      numGuess: 0,
       currentQuestion: {},
       guess: '',
       forceEnd: false
@@ -102,6 +114,18 @@ class QuizView extends Component {
   renderPrePlay(){
       return (
           <div className="quiz-play-holder">
+              <div className="user-holder">
+                <div className="choose-header">Choose User</div>
+                  <div className="users-list">
+                      <label>Users
+                      <select name="user" onChange={this.handleChange}>
+                          <option value="" disabled selected>Guest</option>
+                          {this.state.users.map((user) =>
+                              <option key={user.id} value={user.id}>{user.name}</option>)}
+                      </select>
+                      </label>
+                  </div>
+              </div>
               <div className="choose-header">Choose Category</div>
               <div className="category-holder">
                   <div className="play-category" onClick={this.selectCategory}>ALL</div>
@@ -125,6 +149,7 @@ class QuizView extends Component {
     return(
       <div className="quiz-play-holder">
         <div className="final-header"> Your Final Score is {this.state.numCorrect}</div>
+        <div className="final-header"> Your Total Score is {this.state.numTotal}</div>
         <div className="play-again button" onClick={this.restartGame}> Play Again? </div>
       </div>
     )

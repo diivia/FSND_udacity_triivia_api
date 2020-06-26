@@ -2,7 +2,6 @@ import os
 from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
-from flask_migrate import Migrate
 
 database_name = "trivia"
 database_path = "postgres://{}/{}".format('localhost:5432', database_name)
@@ -19,7 +18,6 @@ def setup_db(app, database_path=database_path):
     db.app = app
     db.init_app(app)
     db.create_all()
-    migrate = Migrate(app, db)
 
 '''
 Question
@@ -84,4 +82,29 @@ class Category(db.Model):
 
   def insert(self):
     db.session.add(self)
+    db.session.commit()
+
+class User(db.Model):
+  __tablename__ = 'users'
+
+  id = Column(Integer, primary_key=True)
+  name = Column(String)
+  score = Column(Integer)
+
+  def __init__(self, name, score):
+    self.score = score
+    self.name = name
+
+  def format(self):
+    return {
+      'id': self.id,
+      'name': self.name,
+      'score': self.score
+    }
+
+  def insert(self):
+    db.session.add(self)
+    db.session.commit()
+
+  def update(self):
     db.session.commit()
